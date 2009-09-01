@@ -23,10 +23,6 @@
 static int _llseek (unsigned int, unsigned long,
 		   unsigned long, ext2_loff_t *, unsigned int);
 
-static _syscall5(int,_llseek,unsigned int,fd,unsigned long,offset_high,
-		 unsigned long, offset_low,ext2_loff_t *,result,
-		 unsigned int, origin)
-
 ext2_loff_t ext2_llseek (unsigned int fd, ext2_loff_t offset,
 			 unsigned int origin)
 {
