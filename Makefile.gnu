@@ -5,4 +5,4 @@ all:
 
 dist:
 	git tag v$(VERSION)
-	git archive --format=tar --prefix=ext2tool-$(VERSION)/ v$(VERSION) | bzip2  > ext2tool-$(VERSION).tar.bz2
+	git archive --format=tar --prefix=ext2tools-$(VERSION)/ v$(VERSION) | bzip2  > ext2tools-$(VERSION).tar.bz2
