@@ -1,6 +1,8 @@
-VERSION=0.1
+VERSION=0.0.1
 
+all:
+	echo "foo"
 
 dist:
-        git archive --format=tar --prefix=ext2tools-$(VERSION)/ v$(VERSION) | \
-                bzip2  > ext2tools-$(VERSION).tar.bz2
+	git tag v$(VERSION)
+	git archive --format=tar --prefix=ext2tool-$(VERSION)/ v$(VERSION) | bzip2  > ext2tool-$(VERSION).tar.bz2
