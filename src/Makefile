@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O2
+CFLAGS=-O2 -I${includedir}
 
 all:	e2part.exe e2pwd.exe e2cat.exe e2cp.exe e2cd2.exe e2ls.exe
 

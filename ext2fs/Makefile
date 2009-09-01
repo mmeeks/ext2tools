@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O2
+CFLAGS=-O2 -I${includedir}
 
 ext2fs.a:	alloc.o badblock.o bb_inode.o bitmaps.o bitops.o block.o \
      chk_desc.o closefs.o expandir.o freefs.o get_path.o \
