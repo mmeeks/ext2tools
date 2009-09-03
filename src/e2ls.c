@@ -6,6 +6,7 @@
  ***************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
@@ -24,7 +25,7 @@ int aflag, dflag, iflag, lflag, tflag, rflag;
 
 struct fileinfo {
 	ino_t	inode;
-	u_char	name[80];
+	unsigned char	name[80];
 	struct ext2_inode e2ino;
 } *list;
 int listix;

@@ -1,4 +1,5 @@
 VERSION=0.0.2
+AR=i386
 
 all:
 	$(MAKE) -C ext2fs

@@ -75,9 +75,10 @@ int test_bit(int nr, const void * addr)
 void ext2fs_warn_bitmap(errcode_t errcode, unsigned long arg,
 			const char *description)
 {
-	if (description)
-		com_err(0, errcode, "#%u for %s", arg, description);
-	else
-		com_err(0, errcode, "#%u", arg);
+  fprintf (stderr, "errcode 0x%x #%u%s%s\n", errcode, arg,
+	   description ? "for " : "", description ? description : "");
+	  //		com_err(0, errcode, "#%u for %s", arg, description);
+	  //	else
+	  //		com_err(0, errcode, "#%u", arg);
 }
 
