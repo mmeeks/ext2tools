@@ -1,4 +1,3 @@
-CC=gcc
 CFLAGS=-O2 -I${includedir}
 
 ext2fs.a:	alloc.o badblock.o bb_inode.o bitmaps.o bitops.o block.o \
