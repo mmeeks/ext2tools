@@ -8,12 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <linux/ext2_fs.h>
 
 #include "e2err.h"
 #include "part.h"
 #include "diskio.h"
 #include "ldisk.h"
-#include "ext2_fs.h"
 
 
 ino_t cwdino;

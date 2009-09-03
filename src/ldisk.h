@@ -5,6 +5,8 @@
  * This file may be redistributed under the terms of the GNU Public License.
  ***************************************************************************/
  
+#include <sys/types.h>
+
 extern ino_t cwdino;			/* Current directory inode number */
 
 extern int nametodisk(int *disk, long *offset, long *length);

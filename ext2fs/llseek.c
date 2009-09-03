@@ -14,7 +14,7 @@
 #include "com_err.h"
 #include "ext2fs/io.h"
 
-#ifdef __linux__
+#if 0
 
 #ifndef __NR__llseek
 #define __NR__llseek            140
