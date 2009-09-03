@@ -5,8 +5,8 @@ all:
 	$(MAKE) -C src
 
 clean:
-	$(MAKE) -C ext2fs
-	$(MAKE) -C src
+	$(MAKE) -C ext2fs clean
+	$(MAKE) -C src clean
 
 dist:
 	git tag -f v$(VERSION)

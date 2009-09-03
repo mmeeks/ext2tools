@@ -11,5 +11,5 @@ ext2fs.a:	alloc.o badblock.o bb_inode.o bitmaps.o bitops.o block.o \
 	$(CC) $(CFLAGS) -I. -I.. -c $<
 
 clean:
-	del *.o
-	del *.a
+	rm -f *.o
+	rm -f *.a
