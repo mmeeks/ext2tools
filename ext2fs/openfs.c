@@ -83,11 +83,15 @@ errcode_t ext2fs_open(const char *name, int flags, int superblock,
 		retval = EXT2_ET_BAD_MAGIC;
 		goto cleanup;
 	}
+#if 1
+#warning Disabled by crazy meeks - do not write to this file-system ...
+#else
 #ifdef	EXT2_CURRENT_REV
 	if (fs->super->s_rev_level > EXT2_LIB_CURRENT_REV) {
 		retval = EXT2_ET_REV_TOO_HIGH;
 		goto cleanup;
 	}
+#endif
 #endif
 	fs->blocksize = EXT2_BLOCK_SIZE(fs->super);
 	fs->fragsize = EXT2_FRAG_SIZE(fs->super);
