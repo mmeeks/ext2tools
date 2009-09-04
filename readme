@@ -1,0 +1,212 @@
+EXT2 TOOLS
+==========
+
+Version 1.0 - 17 May 1995
+
+
+INTRODUCTION
+------------
+
+The ext2 tools are a set of programs that enable you to read a Linux
+ext2 file system under DOS.
+
+The ext2 tools consist of the following programs:
+
+   E2CAT     analogous to the Linux cat command
+   E2CD      analogous to the Linux cd command
+   E2CP      analogous to the Linux cp command
+   E2LS      analogous to the Linux ls command
+   E2PART    lists hard disk partitions
+   E2PWD     analogous to the Linux pwd command
+
+All these programs have been compiled with GCC and require the GO32
+DOS extender in order to execute.
+
+There are currently no programs for writing to an ext2 file system and
+probably never will be unless someone else would care to make them.
+
+The programs are distributed in both binary and source code form.
+
+
+COPYRIGHT
+---------
+
+The ext2 tools are copyright (C) 1995 Claus Tondering (ct@login.dknet.dk).
+
+Note: The ext2fs routines are copyright (C) 1993, 1994 Theodore Ts'o.
+For further copyrights, see the source code files.
+
+The ext2 tools may be redistributed under the terms of the GNU General
+Public License, which is included in the file called COPYING.
+
+For your convenience the GO32 program has been included in this
+distribution. It is part of the DJGPP distribution, which can be obtained
+by anonymous FTP from oak.oakland.edu in the directory /SimTel/msdos/djgpp.
+
+
+DISCLAIMER
+----------
+
+This is free software. Use it at your own risk. If it doesn't work,
+it's your problem, not mine.
+
+
+
+BASIC PRINCIPLES
+----------------
+
+Before you use the ext2 tools, you must set the environment variable
+E2CWD using a statement similar to the following:
+
+	SET E2CWD=129:5
+or
+	SET E2CWD=129:5:234
+
+The three numbers after the equals sign are interpreted thus:
+
+The first number (129 in the above example) identifies the physical
+disk on which the ext2 file system is located. The number is used as
+the second parameter to the DOS biosdisk() routine. Typical values
+are:
+	  0 for A: disk
+	  1 for B: disk
+	128 for first hard disk
+	129 for second hard disk
+
+(Your BIOS may use different values, especially if you have an SCSI
+drive.)
+
+The second number (5 in the above example) is the number of the disk
+partition on which the ext2 file system is located. This number is
+typically part of the Linux file name for the disk device.  If, for
+example, you are used to referring to the disk as /dev/hdb5 under
+Linux, the partition number is 5. The E2PART program can help you
+identify the partitions.
+
+The third number is the inode number of the directory that is to be
+your current working directory. If this number is omitted, 2 (the root
+inode number) is used. If you don't know what an inode is, don't worry.
+Just omit the final number from E2CWD.
+
+Note: File names starting with / will be interpretet relative to the
+root directory on the particular disk identified by the E2CWD
+environment variable.
+
+None of the programs support wildcards.
+
+Be sure to have the GO32.EXE program somewhere in your PATH.
+
+
+
+E2CAT
+-----
+
+SYNOPSIS
+	E2CAT [-bt] pathname
+
+DESCTIPTION
+	The E2CAT program will copy the contents of the file identified
+	by ext2 pathname to the standard output.
+
+	The following options are available:
+
+	-b	Binary mode. No translation performed.
+	
+	-t	Text mode (default). LF translated to CR/LF.
+
+
+
+E2CD
+----
+
+SYNOPSIS
+	E2CD pathname
+
+DESCRIPTION
+	The pathname must identify an ext2 directory. That directory is
+	made the current working directory.
+
+NOTE
+	E2CD is a .BAT file that creates another .BAT file (called
+	___E2CD.BAT) that modifies the E2CWD environment variable. It
+	then executes ___E2CD.BAT and deletes it. (So beware if you
+	alread have a file called ___E2CD.BAT.)
+
+	If you are using 4DOS, add the /Q switch to the DEL command in
+	E2CD.BAT.
+
+
+E2CP
+----
+
+SYNOPSIS
+	E2CP [-bt] file1 file2
+
+DESCTIPTION
+	The E2CP program will copy the contents of the file identified
+	by ext2 pathname 'file1' to the MSDOS file 'file2'.
+
+	The following options are available:
+
+	-b	Binary mode (default). No translation performed.
+	
+	-t	Text mode. LF translated to CR/LF.
+
+
+
+E2LS
+----
+
+SYNOPSIS
+	E2LS [-adiltr] pathname
+
+DESCRIPTION
+	The pathname must identify an ext2 directory or file. The E2LS
+	program provides a list of the contents of that directory in a
+	manner similar to the Linux ls program.
+
+	The following options are supported:
+
+	-a	Include file names starting with . in listing.
+	-d	List only pathname, even if it is a directory.
+	-i	Include inode number in listing.
+	-l	Produce a long listing.
+	-t	Sort by modification time.
+	-r	Reverse the sort order.
+
+
+
+
+E2PART
+------
+
+SYNOPSIS
+	E2PART diskno
+
+DESCRIPTION
+	The E2PART program lists the partitions that are available on a
+	particular physical disk. This program does not use the E2CWD
+	environment variable, instead the disk number is given as an
+	argument to the E2PART program.
+
+BUGS
+	The program is not very good at identifying MSDOS file systems.
+
+
+
+E2PWD
+-----
+
+SYNOPSIS
+	E2PWD
+
+DESCRIPTION
+	The E2PWD program prints the current directory.
+
+
+
+
+HOW TO CONTACT THE AUTHOR
+-------------------------
+
+The author can be contacted by e-mail at ct@login.dknet.dk.
