@@ -101,6 +101,20 @@ usage()
 	exit(1);
 }
 
+static int
+dump_dir_ent (struct ext2_dir_entry *dirent,
+	      int offset, int blocksize,
+	      char *buf, void *priv_data)
+{
+    char name[256+1];
+    int real_len = dirent->name_len & 0xff;
+    int type = dirent->name_len >> 8;
+    strncpy (name, dirent->name, real_len);
+    name[real_len] = '\0';
+    fprintf (stderr, "dir entry '%s'\n", name);
+
+    return 0;
+}
 
 /**********************************************************************
  * main routine
@@ -138,6 +152,14 @@ main(int argc, char **argv)
 	err = ext2fs_open(0, 0, 0, 0, msdos_io_manager, &fs);
 	if (err)
 		e2_err("Cannot open ext2 file system",err);
+
+	{
+	  struct ext2_inode ino;
+	  ext2fs_read_inode (fs, 2 /* root inode */, &ino);
+	  if (!S_ISDIR (ino.i_mode))
+	    fprintf (stderr, "error: root dir is not a dir!\n");
+	  ext2fs_dir_iterate (fs, 2, 0, NULL, dump_dir_ent, NULL);
+	}
 
 	/* Lookup specified name */
 	err = ext2fs_namei(fs, 2, cwdino, filename, &ino);

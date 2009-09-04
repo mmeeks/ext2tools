@@ -1,4 +1,4 @@
-CFLAGS=-O2 -I${includedir}
+CFLAGS=-O0 -g -I${includedir}
 
 all:	alloc.o badblock.o bb_inode.o bitmaps.o bitops.o block.o \
      chk_desc.o closefs.o expandir.o freefs.o get_path.o \

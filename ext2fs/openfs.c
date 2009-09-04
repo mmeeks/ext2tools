@@ -30,6 +30,9 @@ errcode_t ext2fs_open(const char *name, int flags, int superblock,
 	errcode_t	retval;
 	int		i, group_block;
 	char		*dest;
+
+	if (!name)
+	  name = "/dev/sda";
 	
 	EXT2_CHECK_MAGIC(manager, EXT2_ET_MAGIC_IO_MANAGER);
 	
