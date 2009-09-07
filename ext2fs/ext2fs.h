@@ -18,6 +18,9 @@
 #define EXT2FS_ATTR(x)
 #endif
 
+#include <time.h>
+#include <errno.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -296,7 +299,7 @@ struct struct_ext2_filsys {
 #define BLOCK_COUNT_TIND	(-3)
 #define BLOCK_COUNT_TRANSLATOR	(-4)
 
-#if 0
+#if 1
 /*
  * Flags for ext2fs_move_blocks
  */

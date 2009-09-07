@@ -1,4 +1,4 @@
-CFLAGS=-O0 -g -I${includedir} -DHAVE_ERRNO_H -DHAVE_SYS_STAT_H -DHAVE_UNISTD_H
+CFLAGS=-O0 -g -I${includedir}
 
 all:	     $(patsubst %.c,%.o,$(wildcard *.c))
 
