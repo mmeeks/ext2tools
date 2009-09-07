@@ -1,4 +1,4 @@
-VERSION=0.1
+VERSION=1.40
 AR=i386
 
 all:
