@@ -16,7 +16,7 @@
 #include "istat.h"
 #include "e2err.h"
 
-extern io_manager msdos_io_manager;
+extern io_manager dos_io_manager;
 
 
 /**********************************************************************
@@ -48,7 +48,7 @@ main(int argc, char **argv)
 		usage();
 
 	/* Open file system */
-	err = ext2fs_open(0, 0, 0, 0, msdos_io_manager, &fs);
+	err = ext2fs_open(0, 0, 0, 0, dos_io_manager, &fs);
 	if (err)
 		e2_err("Cannot open ext2 file system",err);
 

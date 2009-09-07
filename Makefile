@@ -2,10 +2,14 @@ VERSION=0.1
 AR=i386
 
 all:
+	$(MAKE) -C e2p
+	$(MAKE) -C et
 	$(MAKE) -C ext2fs
 	$(MAKE) -C src
 
 clean:
+	$(MAKE) -C e2p clean
+	$(MAKE) -C et clean
 	$(MAKE) -C ext2fs clean
 	$(MAKE) -C src clean
 
