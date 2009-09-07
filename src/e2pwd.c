@@ -48,13 +48,14 @@ static int myproc(struct ext2_dir_entry *dirent,
 				  void	*private)
 {
 	if (dirent->inode == ino) {
+		int real_len = dirent->name_len & 0xff;
 		if (directory[0]==0) {
-			strncpy(directory, dirent->name, dirent->name_len);
-			directory[dirent->name_len]=0;
+			strncpy(directory, dirent->name, real_len);
+			directory[real_len]=0;
 		}
 		else {
-			strncpy(dir2, dirent->name, dirent->name_len);
-			dir2[dirent->name_len]=0;
+			strncpy(dir2, dirent->name, real_len);
+			dir2[real_len]=0;
 			strcat(dir2, "/");
 			strcat(dir2,directory);
 			strcpy(directory,dir2);

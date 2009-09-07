@@ -97,6 +97,11 @@ errcode_t ext2fs_open2(const char *name, const char *io_options,
 	retval = ext2fs_get_mem(sizeof(struct struct_ext2_filsys), &fs);
 	if (retval)
 		return retval;
+
+	if (!name)
+		name = getenv ("E2DEV");
+	if (!name)
+		name = "/dev/sdb2";
 	
 	memset(fs, 0, sizeof(struct struct_ext2_filsys));
 	fs->magic = EXT2_ET_MAGIC_EXT2FS_FILSYS;

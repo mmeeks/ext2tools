@@ -45,6 +45,9 @@ static int myproc(struct ext2_dir_entry *dirent,
 				  char	*buf,
 				  void	*private)
 {
+	int real_len = dirent->name_len & 0xff;
+	int type = dirent->name_len >> 8;
+
 	if (!list) {
 		list = malloc(100*sizeof(struct fileinfo));
 		if (!list)
@@ -55,11 +58,12 @@ static int myproc(struct ext2_dir_entry *dirent,
 	if (dirent->name[0]=='.' && !aflag)
 		return 0;
 
-	list[listix].inode=dirent->inode;
-	strncpy(list[listix].name,dirent->name,dirent->name_len);
+	list[listix].inode = dirent->inode;
+	strncpy (list[listix].name, dirent->name, real_len);
+	list[listix].name[real_len] = '\0';
 
 	listix++;
-	if (listix==maxlist) {
+	if (listix == maxlist) {
 		list = realloc(list, (maxlist+100) * sizeof(struct fileinfo));
 		if (!list) {
 			fprintf(stderr,"Cannot allocate memory\n");
@@ -128,6 +132,7 @@ main(int argc, char **argv)
 	struct ext2_inode e2ino;
 	char *filename;
 
+	fprintf (stderr, "e2ls starting ...\n");
 	opterr = 0;
 	while ((c=getopt(argc, argv, "adiltr")) != -1) {
 		switch (c) {
@@ -137,7 +142,9 @@ main(int argc, char **argv)
          case 'l': lflag++; break;
          case 't': tflag++; break;
          case 'r': rflag++; break;
-		 case '?': usage();
+		 case '?':
+		case 'h':
+		  usage();
 		}
 	}
 
@@ -148,11 +155,14 @@ main(int argc, char **argv)
 	else
 		filename = argv[optind];
 
+	fprintf (stderr, "filename '%s' ...\n", filename ? filename : "<null>");
+
 	/* Open file system */
 	err = ext2fs_open(0, 0, 0, 0, dos_io_manager, &fs);
 	if (err)
 		e2_err("Cannot open ext2 file system",err);
 
+#if 0
 	{
 	  struct ext2_inode ino;
 	  ext2fs_read_inode (fs, 2 /* root inode */, &ino);
@@ -161,6 +171,7 @@ main(int argc, char **argv)
 		     ino.i_mode, ino.i_blocks, ino.i_flags);
 	  ext2fs_dir_iterate (fs, 2, 0, NULL, dump_dir_ent, NULL);
 	}
+#endif
 
 	/* Lookup specified name */
 	err = ext2fs_namei(fs, 2, cwdino, filename, &ino);

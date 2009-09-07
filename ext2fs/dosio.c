@@ -407,6 +407,7 @@ static errcode_t dos_read_blk(io_channel channel, unsigned long block,
 static errcode_t dos_write_blk(io_channel channel, unsigned long block,
                                int count, const void *buf)
 {
+#if 0
   PARTITION     *part;
   size_t        size;
   ext2_loff_t   loc;
@@ -440,7 +441,8 @@ static errcode_t dos_write_blk(io_channel channel, unsigned long block,
     _dio_error = ERR_HARDWARE;
     return EFAULT;
   }
-
+#endif
+  fprintf (stderr, "Refusing to write to media!\n");
   return 0;
 }
 

@@ -3,7 +3,11 @@ LIBS=-lc -lemu
 EXT2FS=$(wildcard ../ext2fs/*.o) $(wildcard ../e2p/*.o) $(wildcard ../et/*.o)
 # EXT2FS=../ext2fs/ext2fs
 
-all:	e2part.exe e2pwd.exe e2cat.exe e2cp.exe e2cd2.exe e2ls.exe # e2dump.exe
+all:	hello.exe e2part.exe e2pwd.exe e2cat.exe e2cp.exe e2cd2.exe e2ls.exe # e2dump.exe
+
+
+hello.exe: hello.o
+	$(CC) $(CFLAGS) -o hello.exe hello.o $(LIBS)
 
 e2part.exe:	e2part.o diskio.o part.o e2err.o
 	$(CC) $(CFLAGS) -o e2part.exe e2part.o diskio.o part.o e2err.o $(LIBS)
