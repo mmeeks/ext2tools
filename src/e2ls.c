@@ -132,7 +132,6 @@ main(int argc, char **argv)
 	struct ext2_inode e2ino;
 	char *filename;
 
-	fprintf (stderr, "e2ls starting ...\n");
 	opterr = 0;
 	while ((c=getopt(argc, argv, "adiltr")) != -1) {
 		switch (c) {
@@ -154,8 +153,6 @@ main(int argc, char **argv)
 		usage();
 	else
 		filename = argv[optind];
-
-	fprintf (stderr, "filename '%s' ...\n", filename ? filename : "<null>");
 
 	/* Open file system */
 	err = ext2fs_open(0, 0, 0, 0, dos_io_manager, &fs);

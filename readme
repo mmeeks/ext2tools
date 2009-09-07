@@ -1,3 +1,42 @@
+See copying for licensing information.
+
+
+This is a quick port of e2fsprogs-1.40 to DOS.
+
+To use it, install csdpmi5b.zip in the same directory, and then:
+
+e2part 128
+	+ should show partition information
+
+set E2DEV=/dev/sdb2
+	+ set environment variable with linux-like device name
+
+e2ls -l /
+	+ show '/' on the device 9
+
+e2cat /etc/passwd
+	+ dump file to console
+
+e2cp /etc/passwd passwd.txt
+	+ copy /etc/passwd locally
+
+
+	HTH,
+
+		Michael Meeks, Fridrich Strba - 2009
+
+
+------ obsolete instructions ------
+
+
+
+
+
+
+
+
+
+
 EXT2 TOOLS
 ==========
 
