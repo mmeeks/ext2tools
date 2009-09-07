@@ -157,7 +157,8 @@ main(int argc, char **argv)
 	  struct ext2_inode ino;
 	  ext2fs_read_inode (fs, 2 /* root inode */, &ino);
 	  if (!S_ISDIR (ino.i_mode))
-	    fprintf (stderr, "error: root dir is not a dir!\n");
+	    fprintf (stderr, "error: root dir is not a dir !(0x%x) blocks %d flags 0x%x\n",
+		     ino.i_mode, ino.i_blocks, ino.i_flags);
 	  ext2fs_dir_iterate (fs, 2, 0, NULL, dump_dir_ent, NULL);
 	}
 

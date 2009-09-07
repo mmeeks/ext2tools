@@ -3,24 +3,30 @@
  * 	files as standalone functions, in case the application program
  * 	is compiled with inlining turned off.
  * 
- * Copyright (C) 1993 Theodore Ts'o.  This file may be redistributed
- * under the terms of the GNU Public License.
+ * Copyright (C) 1993, 1994 Theodore Ts'o.
+ *
+ * %Begin-Header%
+ * This file may be redistributed under the terms of the GNU Public
+ * License.
+ * %End-Header%
  */
 
 
 #include <stdio.h>
 #include <string.h>
+#if HAVE_UNISTD_H
 #include <unistd.h>
-#include <stdlib.h>
+#endif
 #include <fcntl.h>
 #include <time.h>
-#include <errno.h>
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 
-#include <linux/ext2_fs.h>
-
+#include "ext2_fs.h"
 #define INCLUDE_INLINE_FUNCS
-
 #include "ext2fs.h"
 

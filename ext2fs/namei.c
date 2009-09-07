@@ -1,214 +1,205 @@
 /*
  * namei.c --- ext2fs directory lookup operations
  * 
- * Copyright (C) 1993, 1994 Theodore Ts'o.  This file may be
- * redistributed under the terms of the GNU Public License.
+ * Copyright (C) 1993, 1994, 1994, 1995 Theodore Ts'o.
+ *
+ * %Begin-Header%
+ * This file may be redistributed under the terms of the GNU Public
+ * License.
+ * %End-Header%
  */
 
 #include <stdio.h>
 #include <string.h>
+#if HAVE_UNISTD_H
 #include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
+#endif
 
-#include <linux/ext2_fs.h>
+/* #define NAMEI_DEBUG */
 
+#include "ext2_fs.h"
 #include "ext2fs.h"
 
-struct dir_context {
-	ino_t		dir;
-	int		flags;
-	char		*buf;
-	int (*func)(struct ext2_dir_entry *dirent,
-		    int	offset,
-		    int	blocksize,
-		    char	*buf,
-		    void	*private);
-	void		*private;
-	errcode_t	errcode;
-};
+static errcode_t open_namei(ext2_filsys fs, ext2_ino_t root, ext2_ino_t base,
+			    const char *pathname, size_t pathlen, int follow,
+			    int link_count, char *buf, ext2_ino_t *res_inode);
 
-static int process_dir_block(ext2_filsys fs,
-			     blk_t	*blocknr,
-			     int	blockcnt,
-			     void	*private);
-
-errcode_t ext2fs_dir_iterate(ext2_filsys fs,
-			     ino_t dir,
-			     int flags,
-			     char *block_buf,
-			     int (*func)(struct ext2_dir_entry *dirent,
-					 int	offset,
-					 int	blocksize,
-					 char	*buf,
-					 void	*private),
-			     void *private)
+static errcode_t follow_link(ext2_filsys fs, ext2_ino_t root, ext2_ino_t dir,
+			     ext2_ino_t inode, int link_count,
+			     char *buf, ext2_ino_t *res_inode)
 {
-	struct		dir_context	ctx;
-	errcode_t	retval;
-	
-	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
+	char *pathname;
+	char *buffer = 0;
+	errcode_t retval;
+	struct ext2_inode ei;
 
-	retval = ext2fs_check_directory(fs, dir);
-	if (retval)
-		return retval;
+#ifdef NAMEI_DEBUG
+	printf("follow_link: root=%lu, dir=%lu, inode=%lu, lc=%d\n",
+	       root, dir, inode, link_count);
 	
-	ctx.dir = dir;
-	ctx.flags = flags;
-	if (block_buf)
-		ctx.buf = block_buf;
-	else {
-		ctx.buf = malloc(fs->blocksize);
-		if (!ctx.buf)
-			return ENOMEM;
+#endif
+	retval = ext2fs_read_inode (fs, inode, &ei);
+	if (retval) return retval;
+	if (!LINUX_S_ISLNK (ei.i_mode)) {
+		*res_inode = inode;
+		return 0;
 	}
-	ctx.func = func;
-	ctx.private = private;
-	ctx.errcode = 0;
-	retval = ext2fs_block_iterate(fs, dir, 0, 0, process_dir_block, &ctx);
-	if (!block_buf)
-		free(ctx.buf);
-	if (retval)
-		return retval;
-	return ctx.errcode;
+	if (link_count++ > 5) {
+		return EXT2_ET_SYMLINK_LOOP;
+	}
+	if (ext2fs_inode_data_blocks(fs,&ei)) {
+		retval = ext2fs_get_mem(fs->blocksize, &buffer);
+		if (retval)
+			return retval;
+		retval = io_channel_read_blk(fs->io, ei.i_block[0], 1, buffer);
+		if (retval) {
+			ext2fs_free_mem(&buffer);
+			return retval;
+		}
+		pathname = buffer;
+	} else
+		pathname = (char *)&(ei.i_block[0]);
+	retval = open_namei(fs, root, dir, pathname, ei.i_size, 1,
+			    link_count, buf, res_inode);
+	if (buffer)
+		ext2fs_free_mem(&buffer);
+	return retval;
 }
 
-static int process_dir_block(ext2_filsys  fs,
-			     blk_t	*blocknr,
-			     int	blockcnt,
-			     void	*private)
+/*
+ * This routine interprets a pathname in the context of the current
+ * directory and the root directory, and returns the inode of the
+ * containing directory, and a pointer to the filename of the file
+ * (pointing into the pathname) and the length of the filename.
+ */
+static errcode_t dir_namei(ext2_filsys fs, ext2_ino_t root, ext2_ino_t dir,
+			   const char *pathname, int pathlen,
+			   int link_count, char *buf,
+			   const char **name, int *namelen,
+			   ext2_ino_t *res_inode)
 {
-	struct dir_context *ctx = (struct dir_context *) private;
-	int		offset = 0;
-	int		ret;
-	int		changed = 0;
-	int		do_abort = 0;
-	struct ext2_dir_entry *dirent;
+	char c;
+	const char *thisname;
+	int len;
+	ext2_ino_t inode;
+	errcode_t retval;
 
-	if (blockcnt < 0)
-		return 0;
-
-	ctx->errcode = io_channel_read_blk(fs->io, *blocknr, 1, ctx->buf);
-	if (ctx->errcode)
-		return BLOCK_ABORT;
-	
-	while (offset < fs->blocksize) {
-		dirent = (struct ext2_dir_entry *) (ctx->buf + offset);
-		if (!dirent->inode &&
-		    !(ctx->flags & DIRENT_FLAG_INCLUDE_EMPTY))
-			goto next;
-
-		ret = (ctx->func)(dirent, offset, fs->blocksize,
-				  ctx->buf, ctx->private);
-		if (ret & DIRENT_CHANGED)
-			changed++;
-		if (ret & DIRENT_ABORT) {
-			do_abort++;
+	if ((c = *pathname) == '/') {
+        	dir = root;
+		pathname++;
+		pathlen--;
+	}
+	while (1) {
+        	thisname = pathname;
+		for (len=0; --pathlen >= 0;len++) {
+			c = *(pathname++);
+			if (c == '/')
+				break;
+		}
+		if (pathlen < 0)
 			break;
-		}
-next:		
-		if (((offset + dirent->rec_len) > fs->blocksize) ||
-		    (dirent->rec_len < 8) ||
-		    ((dirent->name_len+8) > dirent->rec_len)) {
-			ctx->errcode = EXT2_ET_DIR_CORRUPTED;
-			return BLOCK_ABORT;
-		}
-		offset += dirent->rec_len;
-	}
-
-	if (changed) {
-		ctx->errcode = io_channel_write_blk(fs->io, *blocknr, 1,
-						    ctx->buf);
-		if (ctx->errcode)
-			return BLOCK_ABORT;
-	}
-	if (do_abort)
-		return BLOCK_ABORT;
+		retval = ext2fs_lookup (fs, dir, thisname, len, buf, &inode);
+		if (retval) return retval;
+        	retval = follow_link (fs, root, dir, inode,
+				      link_count, buf, &dir);
+        	if (retval) return retval;
+    	}
+	*name = thisname;
+	*namelen = len;
+	*res_inode = dir;
 	return 0;
 }
 
-struct lookup_struct  {
-	const char	*name;
-	int		len;
-	ino_t		*inode;
-	int		found;
-};	
-
-static int lookup_proc(struct ext2_dir_entry *dirent,
-		       int	offset,
-		       int	blocksize,
-		       char	*buf,
-		       void	*private)
+static errcode_t open_namei(ext2_filsys fs, ext2_ino_t root, ext2_ino_t base,
+			    const char *pathname, size_t pathlen, int follow,
+			    int link_count, char *buf, ext2_ino_t *res_inode)
 {
-	struct lookup_struct *ls = (struct lookup_struct *) private;
+	const char *base_name;
+	int namelen;
+	ext2_ino_t dir, inode;
+	errcode_t retval;
 
-	if (ls->len != dirent->name_len)
+#ifdef NAMEI_DEBUG
+	printf("open_namei: root=%lu, dir=%lu, path=%*s, lc=%d\n",
+	       root, base, pathlen, pathname, link_count);
+#endif
+	retval = dir_namei(fs, root, base, pathname, pathlen,
+			   link_count, buf, &base_name, &namelen, &dir);
+	if (retval) return retval;
+	if (!namelen) {                     /* special case: '/usr/' etc */
+		*res_inode=dir;
 		return 0;
-	if (strncmp(ls->name, dirent->name, dirent->name_len))
-		return 0;
-	*ls->inode = dirent->inode;
-	ls->found++;
-	return DIRENT_ABORT;
+	}
+	retval = ext2fs_lookup (fs, dir, base_name, namelen, buf, &inode);
+	if (retval)
+		return retval;
+	if (follow) {
+		retval = follow_link(fs, root, dir, inode, link_count,
+				     buf, &inode);
+		if (retval)
+			return retval;
+	}
+#ifdef NAMEI_DEBUG
+	printf("open_namei: (link_count=%d) returns %lu\n",
+	       link_count, inode);
+#endif
+	*res_inode = inode;
+	return 0;
 }
 
-
-errcode_t ext2fs_lookup(ext2_filsys fs, ino_t dir, const char *name,
-			int namelen, char *buf, ino_t *inode)
+errcode_t ext2fs_namei(ext2_filsys fs, ext2_ino_t root, ext2_ino_t cwd,
+		       const char *name, ext2_ino_t *inode)
 {
-	errcode_t	retval;
-	struct lookup_struct ls;
-
+	char *buf;
+	errcode_t retval;
+	
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
-	ls.name = name;
-	ls.len = namelen;
-	ls.inode = inode;
-	ls.found = 0;
+	retval = ext2fs_get_mem(fs->blocksize, &buf);
+	if (retval)
+		return retval;
+	
+	retval = open_namei(fs, root, cwd, name, strlen(name), 0, 0,
+			    buf, inode);
 
-	retval = ext2fs_dir_iterate(fs, dir, 0, buf, lookup_proc, &ls);
+	ext2fs_free_mem(&buf);
+	return retval;
+}
+
+errcode_t ext2fs_namei_follow(ext2_filsys fs, ext2_ino_t root, ext2_ino_t cwd,
+			      const char *name, ext2_ino_t *inode)
+{
+	char *buf;
+	errcode_t retval;
+	
+	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
+
+	retval = ext2fs_get_mem(fs->blocksize, &buf);
+	if (retval)
+		return retval;
+	
+	retval = open_namei(fs, root, cwd, name, strlen(name), 1, 0,
+			    buf, inode);
+
+	ext2fs_free_mem(&buf);
+	return retval;
+}
+
+errcode_t ext2fs_follow_link(ext2_filsys fs, ext2_ino_t root, ext2_ino_t cwd,
+			ext2_ino_t inode, ext2_ino_t *res_inode)
+{
+	char *buf;
+	errcode_t retval;
+	
+	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
+
+	retval = ext2fs_get_mem(fs->blocksize, &buf);
 	if (retval)
 		return retval;
 
-	return (ls.found) ? 0 : ENOENT;
+	retval = follow_link(fs, root, cwd, inode, 0, buf, res_inode);
+
+	ext2fs_free_mem(&buf);
+	return retval;
 }
 
-errcode_t ext2fs_namei(ext2_filsys fs, ino_t root, ino_t cwd, const char *name,
-		       ino_t *inode)
-{
-	ino_t		dir = cwd;
-	char		*buf;
-	const char	*p = name, *q;
-	int		len;
-	errcode_t	retval;
-
-	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
-
-	buf = malloc(fs->blocksize);
-	if (!buf)
-		return ENOMEM;
-	if (*p == '/') {
-		p++;
-		dir = root;
-	}
-	while (*p) {
-		q = strchr(p, '/');
-		if (q)
-			len = q - p;
-		else
-			len = strlen(p);
-		if (len) {
-			retval = ext2fs_lookup(fs, dir, p, len, buf, &dir);
-			if (retval) {
-				free(buf);
-				return retval;
-			}
-		}
-		if (q)
-			p = q+1;
-		else
-			break;
-	}
-	*inode = dir;
-	free(buf);
-	return 0;
-}

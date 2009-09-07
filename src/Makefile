@@ -3,7 +3,7 @@ LIBS=-lc -lemu
 EXT2FS=../ext2fs/*.o
 # EXT2FS=../ext2fs/ext2fs
 
-all:	e2part.exe e2pwd.exe e2cat.exe e2cp.exe e2cd2.exe e2ls.exe e2dump.exe
+all:	e2part.exe e2pwd.exe e2cat.exe e2cp.exe e2cd2.exe e2ls.exe # e2dump.exe
 
 e2part.exe:	e2part.o diskio.o part.o e2err.o
 	$(CC) $(CFLAGS) -o e2part.exe e2part.o diskio.o part.o e2err.o $(LIBS)
@@ -29,8 +29,8 @@ e2ls.exe:	e2ls.o diskio.o part.o ldisk.o msdos_io.o e2err.o
 	$(CC) $(CFLAGS) -o e2ls.exe e2ls.o diskio.o part.o ldisk.o msdos_io.o e2err.o $(EXT2FS) $(LIBS)
 #	coff2exe e2ls
 
-e2dump.exe:	e2dump.o diskio.o part.o ldisk.o msdos_io.o e2err.o
-	$(CC) $(CFLAGS) -o e2dump.exe e2dump.o diskio.o part.o ldisk.o msdos_io.o e2err.o $(EXT2FS) $(LIBS)
+# e2dump.exe:	e2dump.o diskio.o part.o ldisk.o msdos_io.o e2err.o
+# 	$(CC) $(CFLAGS) -o e2dump.exe e2dump.o diskio.o part.o ldisk.o msdos_io.o e2err.o $(EXT2FS) $(LIBS)
 
 %.o:	%.c
 	$(CC) $(CFLAGS) -I. -I.. -I../linux -c $<
